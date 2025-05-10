@@ -1,103 +1,150 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useLocalStorage } from './hooks/useLocalStorage';
+import { fivemService } from './services/fivemService';
+import { Server } from './types/server';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [servers, setServers] = useLocalStorage<Server[]>('favorite-servers', []);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [error, setError] = useState('');
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    setIsSearching(true);
+    setError('');
+    
+    try {
+      const response = await fetch(`/api/server?search=${encodeURIComponent(searchQuery)}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch servers');
+      }
+      
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (err) {
+      console.error('Search error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to search servers. Please try again.');
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleAddServer = (server: any) => {
+    const newServer: Server = {
+      ip: server.EndPoint,
+      name: server.Data?.hostname || 'Unknown Server',
+      players: server.Data?.players?.length || 0,
+      maxPlayers: server.Data?.vars?.sv_maxClients || 32,
+      status: 'online'
+    };
+
+    if (!servers.find(s => s.ip === newServer.ip)) {
+      setServers([...servers, newServer]);
+    }
+  };
+
+  const handleRemoveServer = (ip: string) => {
+    setServers(servers.filter(server => server.ip !== ip));
+  };
+
+  return (
+    <main className="min-h-screen p-8 bg-gray-100">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold mb-8 text-gray-800">FiveM Server Favorites</h1>
+        
+        {/* Search Section */}
+        <div className="mb-8">
+          <div className="flex gap-4">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search servers..."
+              className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <button
+              onClick={handleSearch}
+              disabled={isSearching}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+            >
+              {isSearching ? 'Searching...' : 'Search'}
+            </button>
+          </div>
+          {error && <p className="mt-2 text-red-500">{error}</p>}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        {/* Search Results */}
+        {searchResults.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Search Results</h2>
+            <div className="grid gap-4">
+              {searchResults.map((server) => (
+                <div key={server.EndPoint} className="bg-white p-4 rounded-lg shadow">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold">{server.Data?.hostname || 'Unknown Server'}</h3>
+                      <p className="text-sm text-gray-500">
+                        Players: {server.Data?.players?.length || 0}/{server.Data?.vars?.sv_maxClients || 32}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        IP: {server.EndPoint}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleAddServer(server)}
+                      className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                    >
+                      Add to Favorites
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Favorite Servers */}
+        <div>
+          <h2 className="text-2xl font-semibold mb-4">Favorite Servers</h2>
+          <div className="grid gap-4">
+            {servers.map((server) => (
+              <div key={server.ip} className="bg-white p-4 rounded-lg shadow">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-semibold">{server.name}</h3>
+                    <p className="text-sm text-gray-500">
+                      Players: {server.players}/{server.maxPlayers}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      IP: {server.ip}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleRemoveServer(server.ip)}
+                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {servers.length === 0 && (
+            <p className="text-center text-gray-500 mt-8">
+              No favorite servers added yet. Search and add servers above!
+            </p>
+          )}
+        </div>
+      </div>
+    </main>
   );
-}
+} 
