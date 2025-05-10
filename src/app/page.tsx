@@ -33,32 +33,32 @@ export default function Home() {
   return (
     <main className="min-h-screen p-8 bg-gray-100">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-center">FiveM Sunucu Listesi</h1>
+        <h1 className="text-4xl font-bold mb-8 text-center">FiveM Server List</h1>
         
-        {/* Arama Bölümü */}
+        {/* Search Section */}
         <div className="mb-8">
           <div className="flex gap-4">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Sunucu ara..."
+              placeholder="Search servers..."
               className="flex-1 p-2 border rounded-lg"
             />
             <button
               onClick={handleSearch}
               disabled={isSearching}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
             >
-              {isSearching ? 'Aranıyor...' : 'Ara'}
+              {isSearching ? 'Searching...' : 'Search'}
             </button>
           </div>
         </div>
 
-        {/* Arama Sonuçları */}
+        {/* Search Results */}
         {searchResults.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Arama Sonuçları</h2>
+            <h2 className="text-2xl font-semibold mb-4">Search Results</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {searchResults.map((server) => (
                 <div key={server.id} className="bg-white p-4 rounded-lg shadow">
@@ -71,10 +71,12 @@ export default function Home() {
                       <PlusIcon className="w-5 h-5" />
                     </button>
                   </div>
-                  <p className="text-gray-600">{server.description}</p>
                   <div className="mt-2">
                     <span className="text-sm text-gray-500">
-                      Oyuncular: {server.players}/{server.maxPlayers}
+                      Players: {server.players}/{server.maxPlayers}
+                    </span>
+                    <span className="ml-2 text-sm text-gray-500">
+                      Status: {server.status}
                     </span>
                   </div>
                 </div>
@@ -83,9 +85,9 @@ export default function Home() {
           </div>
         )}
 
-        {/* Favori Sunucular */}
+        {/* Favorite Servers */}
         <div>
-          <h2 className="text-2xl font-semibold mb-4">Favori Sunucularım</h2>
+          <h2 className="text-2xl font-semibold mb-4">Favorite Servers</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {favoriteServers.map((server) => (
               <div key={server.id} className="bg-white p-4 rounded-lg shadow">
@@ -98,10 +100,12 @@ export default function Home() {
                     <XMarkIcon className="w-5 h-5" />
                   </button>
                 </div>
-                <p className="text-gray-600">{server.description}</p>
                 <div className="mt-2">
                   <span className="text-sm text-gray-500">
-                    Oyuncular: {server.players}/{server.maxPlayers}
+                    Players: {server.players}/{server.maxPlayers}
+                  </span>
+                  <span className="ml-2 text-sm text-gray-500">
+                    Status: {server.status}
                   </span>
                 </div>
               </div>

@@ -1,24 +1,22 @@
 import axios from 'axios';
 
-const FIVEM_LIST_API = 'https://api.fivemlist.net/api';
-
 export interface Server {
   id: string;
   name: string;
-  players: number;
-  maxPlayers: number;
-  status: string;
   ip: string;
   port: number;
-  description: string;
-  banner: string;
-  tags: string[];
+  players: number;
+  maxPlayers: number;
+  status: 'online' | 'offline';
+  lastUpdated: string;
 }
+
+const API_BASE_URL = 'https://api.fivemlist.net/v1';
 
 export const fivemService = {
   async searchServers(query: string): Promise<Server[]> {
     try {
-      const response = await axios.get(`${FIVEM_LIST_API}/servers/search`, {
+      const response = await axios.get(`${API_BASE_URL}/servers/search`, {
         params: { query }
       });
       return response.data;
@@ -28,12 +26,14 @@ export const fivemService = {
     }
   },
 
-  async getServerDetails(serverId: string): Promise<Server | null> {
+  async getServerStatus(ip: string, port: number): Promise<Server | null> {
     try {
-      const response = await axios.get(`${FIVEM_LIST_API}/servers/${serverId}`);
+      const response = await axios.get(`${API_BASE_URL}/servers/status`, {
+        params: { ip, port }
+      });
       return response.data;
     } catch (error) {
-      console.error('Error getting server details:', error);
+      console.error('Error getting server status:', error);
       return null;
     }
   }
